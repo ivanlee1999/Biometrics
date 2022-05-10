@@ -12,15 +12,24 @@ from tensorflow.keras.layers import Dropout, Conv2D, Input
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import MaxPooling2D, Lambda, Flatten, Dense, BatchNormalization
 from tensorflow.keras import backend as K
+import tf.keras.losses.CosineSimilarity
+
 
 import numpy as np
 import numpy.random as rng
 
 
-def euclidean_distance(vectors):
+# def euclidean_distance(vectors):
+#     vector1, vector2 = vectors
+#     sum_square = K.sum(K.square(vector1 - vector2), axis=1, keepdims=True)
+#     return K.sqrt(K.maximum(sum_square, K.epsilon()))
+
+def cosine_distance(vectors):
     vector1, vector2 = vectors
-    sum_square = K.sum(K.square(vector1 - vector2), axis=1, keepdims=True)
-    return K.sqrt(K.maximum(sum_square, K.epsilon()))
+    cosine_loss = tf.keras.losses.CosineSimilarity(axis=1)
+    return(K.maximum(cosine_loss(vector1, vector2), K.epsilon()))
+
+
 
 def contrastive_loss(label, ED):
     margin = 1
@@ -59,7 +68,7 @@ def create_siamese_model(input_shape):
     output_top = shared_network(input_top)
     output_bottom = shared_network(input_bottom)
     
-    distance = Lambda(euclidean_distance, output_shape=(1,))([output_top, output_bottom])
+    distance = Lambda(cosine_distance, output_shape=(1,))([output_top, output_bottom])
 
     model = Model(inputs=[input_top, input_bottom], outputs=distance)
     
